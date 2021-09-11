@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 let Schema = mongoose.Schema;
 const PdfileSchema = new Schema({
     filename: { type: String, required: true },
-    createdAt: { type: Date, required: true }
+    createdAt: { type: String, required: true }
 });
 
 const PdfileModel = mongoose.model('Pdfile', PdfileSchema);
