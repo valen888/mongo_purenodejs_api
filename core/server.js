@@ -16,6 +16,7 @@ http.createServer(function (req, res) {
         case "GET":
             if (req.url === "/users") {
                 user.getAll()
+                //GET REQUEST TO GET LIST OF ALL ALL USERS
                     .then(all_users => {
                         res.writeHead(200, { "ContentType": "application/json" });
                         res.write(JSON.stringify(all_users, null, 2));
@@ -27,6 +28,8 @@ http.createServer(function (req, res) {
                         res.end();
                     });
             } else if (req.url === "/test_pdf") {
+                //TEST REQUEST
+                //go to GET /test_pdf to simulate POST request and get PDF (test task)
                 var today = new Date();
                 var dd = String(today.getDate()).padStart(2, '0');
                 var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
@@ -91,7 +94,8 @@ http.createServer(function (req, res) {
                         });
                 })
             }
-            else if (url.parse(req.url, true).query.id) {
+            else if (url.parse(req.url, true).pathname === "/users" && url.parse(req.url, true).query.id) {
+                //GET REQUEST TO GET AN EXECT USER BY /USERS?ID={ID}
                 const user_id = url.parse(req.url, true).query.id;
                 user.getById(user_id)
                     .then(user_data => {
@@ -112,6 +116,7 @@ http.createServer(function (req, res) {
             break;
         case "POST":
             if (req.url === "/add_user") {
+                //INSERT NEW USER POST REQUEST
                 let data = '';
                 req.on('data', chunk => {
                     data += chunk;
@@ -137,7 +142,10 @@ http.createServer(function (req, res) {
                 })
             }
             else if (req.url === "/add_user_pdf") {
+                //TEST TASK POST REQUEST
+                //ACCEPTS NEW USER FROM CLIENT, INSERTS INTO MONGO AND GIVES A PDF`ed USER TO RESPONSE
 
+                //get current date as mm_dd_yyyy
                 var today = new Date();
                 var dd = String(today.getDate()).padStart(2, '0');
                 var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
@@ -152,9 +160,11 @@ http.createServer(function (req, res) {
                     let new_pdf_name = ``;
                     let user_data = JSON.parse(data);
 
+                    //inserting new user given from client
                     user.insert(new User(user_data.firstname, user_data.lastname,
                         user_data.email, user_data.pnumber, user_data.location, user_data.socials))
                         .then(nudata => {
+
                             let new_user_obj = {
                                 firstname: nudata.firstname,
                                 lastname: nudata.lastname,
@@ -165,17 +175,25 @@ http.createServer(function (req, res) {
                             }
                             new_pdf_name = new_user_obj.firstname + '_' + new_user_obj.lastname + '_' + today;
 
+                            //creating pdf
                             let theOutput = new PDFGenerator;
                             theOutput.pipe(fs.createWriteStream(`./pdf_files/${new_pdf_name}.pdf`))
                             theOutput.text(JSON.stringify(new_user_obj, null, 2));
                             theOutput.end();
+
+                            //
                             res.writeHead(200, {
                                 'Content-Type': 'application/pdf',
-                                'Content-disposition': `attachment; filename=${new_pdf_name}.pdf`
+                                'Content-disposition': `attachment; filename=${new_pdf_name}.pdf` // turn this off to stream w/o download
                             });
+
+                            //inserting new pdf to mongo
                             return pdfile.insert(new pdfile(new_pdf_name, today));
                         })
                         .then(pdf_data => {
+
+                            //streaming newly created pdf file to client (force download)
+
                             let filePath = path.join(__dirname, `../pdf_files/${pdf_data.filename}.pdf`);
                             let readStream = fs.createReadStream(filePath);
 

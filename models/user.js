@@ -32,24 +32,6 @@ class User {
         return new UserModel(user).save();
     }
 
-    static true_insert(user) {
-        return UserModel.updateOne(
-            {
-                firstname: user.firstname
-            },
-            {
-                $setOnInsert: {
-                    firstname: user.firstname, 
-                    lastname: user.lastname,
-                    email: user.email, 
-                    pnumber: user.pnumber, 
-                    location: user.location, 
-                    socials: user.socials
-                }
-            },
-            { upsert: true }
-        );
-    }
     static update(id, firstname, lastname, email, pnumber, location, socials) {
         return UserModel.updateOne({ _id: id }, {
             firstname: firstname, lastname: lastname,
